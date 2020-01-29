@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Blimp Shooting Game</title>
+    <style>
+        body {
+            background:url(bg.jpg);
+            background-repeat:no-repeat;
+           
+        }
+    </style>
+    <script src="https://code.createjs.com/1.0.0/easeljs.min.js"></script>
+    <script>
+    
+        var stage;
+        var txt;
+        var img;
+        var bg;
+        var gun;
+        var bmap;
+        var cannon;
+        var canvas;
+        var bullet;
+        var shooting = false;
+        var exploding = 0;
+        var ships_crossed = 0;
+        var score = 0;
+        document.onkeydown = handleKeyDown;
+    
+    function init() {
+
+        canvas = document.getElementById('canvas1');
+        stage = new createjs.Stage(canvas);
+
+        txt = new createjs.Text("Score " + score, "24px arial", "#000");
+        txt.x = 675;
+        txt.y = 0;
+
+        gun = new Image();
+        gun.src = "cannon.png";
+        gun.onload = drawCannon;
+
+        boom = new Image();
+        boom.src = "boom.png";
+        boom.onload = drawExplosion;
+
+        blimp = new Image();
+        blimp.src = "blimp.png";
+        blimp.onload = drawBlimp;
+
+        drawBullet();
+
+        createjs.Ticker.setFPS(30);
+        createjs.Ticker.addEventListener("tick", tick);
+
+    }
+
+    function drawBlimp(event) {
+        bmap = new createjs.Bitmap(blimp);
+        bmap.x = 800;
+        bmap.y = 300;
+        bmap.speed = 3;
+        stage.addChild(bmap); 
+        stage.addChild(txt);
+        stage.update();
+    }
+
+    function drawCannon(event) {
+        cannon = new createjs.Bitmap(gun);
+        cannon.x = 200;
+        cannon.y = 500;
+        stage.addChild(cannon);
+        stage.update();
+    }
+
+    function drawBullet() {
+        bullet = new createjs.Shape();
+        bullet.graphics.beginFill("black").drawCircle(0,0,5);
+        bullet.x = -20;
+        bullet.y = -20;
+        stage.addChild(bullet);
+        stage.update();
+    }
+
+    function drawExplosion() {
+        bang = new createjs.Bitmap(boom);
+        bang.x = 100;
+        bang.y = 100;
+        stage.addChild(bang);
+        stage.update();
+    }
+
+    function tick() {
+        bmap.x -= bmap.speed;
+
+        if (bmap.x < -200) {
+            restartShip();
+            ships_crossed++;
+            if(ships_crossed > 5) endGame();
+        }
+
+        if (shooting) {
+            bullet.x += 8 ;
+            bullet.y -= 8 ;
+            if (bullet.x > 800 || (bullet.y < 0) || (blimpHit())) {
+                shooting = false;
+                bullet.x = -20;
+                bullet.y = -20;
+            }
+        }
+
+        if(exploding > 0) {
+            exploding --;
+        } else {
+            bang.x = -100;
+            bang.y = -100;
+        }
+
+        stage.update();
+    }
+
+    function blimpHit() {
+        if ((bullet.x - bmap.x < 100) && (bullet.x - bmap.x > 0) && (bullet.y - bmap.y < 75) && (bullet.y - bmap.y > 0)) {
+
+            exploding = 5;
+
+            score++;
+            txt.text = "Score " + score;
+
+            bang.x = bullet.x - 50;
+            bang.y = bullet.y - 40;
+
+            bullet.x = -20;
+            bullet.y = -20;
+
+            restartShip();
+        }
+    }
+
+    function endGame() {
+        bmap.speed = 0;
+        txt.x = 300;
+        txt.y = 300;
+        txt.text = "GAME OVER!\n\nYou scored " + score + " hits!\n\nRefresh to play again ...";
+        stage.update();
+    };
+
+    function handleKeyDown(e) {
+        var key = e.keyCode;
+        if(key == 37) {
+            if (cannon.x > 3) cannon.x -=3;
+        }
+        if (key == 39) {
+            if(cannon.x < 713) cannon.x += 3;
+        }
+        if (key == 32) {
+            if(!shooting) {
+                bullet.x = cannon.x + 40;
+                bullet.y = cannon.y + 5;
+                shooting = true;
+            }
+        }
+    }
+
+    function restartShip() {
+        bmap.x = 800;
+        bmap.y = Math.floor(0.6 * canvas.height * Math.random());
+        bmap.speed = (Math.random()*4) + 3;
+    }
+ 
+    </script>
+</head>
+<body onload = "init();">
+    <canvas id="canvas1" width="800" height="600"></canvas>
+    
+</body>
+</html>
